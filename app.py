@@ -20,7 +20,18 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 
 # ── DB init ─────────────────────────────────────────────────────────────────
-MONGO_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/autoparts')
+# Try multiple possible env variable names Railway might use
+MONGO_URI = (
+    os.environ.get('MONGODB_URI') or
+    os.environ.get('MONGO_URL') or
+    os.environ.get('MONGODB_URL') or
+    os.environ.get('MONGO_URI') or
+    'mongodb://localhost:27017/autoparts'
+)
+# Add database name if missing
+if MONGO_URI and '/autoparts' not in MONGO_URI and 'localhost' not in MONGO_URI:
+    MONGO_URI = MONGO_URI + '/autoparts'
+print(f"🔌 Connecting to: {MONGO_URI[:50]}...")
 
 for i in range(30):
     try:
