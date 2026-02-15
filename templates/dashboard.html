@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Row -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+  <div class="card" style="display:flex;align-items:center;gap:14px;">
+    <div style="background:#1e3a8a;border-radius:12px;padding:12px;"><i class="fas fa-boxes" style="color:#60a5fa;font-size:20px;"></i></div>
+    <div><p style="color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;">Products</p><p id="s-products" style="font-size:28px;font-weight:800;color:#e2e8f0;">-</p></div>
+  </div>
+  <div class="card" style="display:flex;align-items:center;gap:14px;">
+    <div style="background:#14532d;border-radius:12px;padding:12px;"><i class="fas fa-dollar-sign" style="color:#4ade80;font-size:20px;"></i></div>
+    <div><p style="color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;">Inv. Value</p><p id="s-value" style="font-size:24px;font-weight:800;color:#4ade80;">-</p></div>
+  </div>
+  <div class="card" style="display:flex;align-items:center;gap:14px;">
+    <div style="background:#7c2d12;border-radius:12px;padding:12px;"><i class="fas fa-shopping-cart" style="color:#fb923c;font-size:20px;"></i></div>
+    <div><p style="color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;">Orders (7d)</p><p id="s-orders" style="font-size:28px;font-weight:800;color:#fb923c;">-</p></div>
+  </div>
+  <div class="card" style="display:flex;align-items:center;gap:14px;">
+    <div style="background:#854d0e;border-radius:12px;padding:12px;"><i class="fas fa-exclamation-triangle" style="color:#fbbf24;font-size:20px;"></i></div>
+    <div><p style="color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;">Low Stock</p><p id="s-low" style="font-size:28px;font-weight:800;color:#fbbf24;">-</p></div>
+  </div>
+  <div class="card" style="display:flex;align-items:center;gap:14px;">
+    <div style="background:#450a0a;border-radius:12px;padding:12px;"><i class="fas fa-times-circle" style="color:#f87171;font-size:20px;"></i></div>
+    <div><p style="color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;">Out of Stock</p><p id="s-oos" style="font-size:28px;font-weight:800;color:#f87171;">-</p></div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+  <button onclick="window.location.href='/products/add'" class="btn-primary"><i class="fas fa-plus"></i> Add New Product</button>
+  <button onclick="window.location.href='/products'" class="btn-secondary"><i class="fas fa-search"></i> Search Inventory</button>
+  <button onclick="window.location.href='/orders'" class="btn-secondary"><i class="fas fa-list"></i> View Orders</button>
+</div>
+
+<!-- Two columns -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+
+  <!-- Recent orders -->
+  <div class="card">
+    <h3 style="font-weight:700;color:#e2e8f0;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i class="fas fa-shopping-cart" style="color:#fb923c;"></i> Recent Orders</h3>
+    <div id="recent-orders"></div>
+  </div>
+
+  <!-- Low stock -->
+  <div class="card">
+    <h3 style="font-weight:700;color:#e2e8f0;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i class="fas fa-exclamation-triangle" style="color:#fbbf24;"></i> Low Stock Alert</h3>
+    <div id="low-stock-list"></div>
+  </div>
+
+</div>
+
+<!-- Recently added -->
+<div class="card">
+  <h3 style="font-weight:700;color:#e2e8f0;margin-bottom:16px;display:flex;align-items:center;gap:8px;"><i class="fas fa-clock" style="color:#818cf8;"></i> Recently Added Products</h3>
+  <div id="recent-products" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function loadDashboard(){
+  const data = await api('/api/dashboard/stats');
+  if(!data.success) return;
+
+  const s = data.stats;
+  document.getElementById('s-products').textContent = s.total_products;
+  document.getElementById('s-value').textContent = '$'+s.total_value.toLocaleString();
+  document.getElementById('s-orders').textContent = s.recent_orders_7d;
+  document.getElementById('s-low').textContent = s.low_stock;
+  document.getElementById('s-oos').textContent = s.out_of_stock;
+
+  // Recent orders
+  const ro = document.getElementById('recent-orders');
+  if(data.recent_orders.length===0){ro.innerHTML='<p style="color:#475569;font-size:14px;">No orders yet</p>';}
+  else ro.innerHTML = data.recent_orders.map(o=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e293b;">
+      ${o.product_image?`<img src="${o.product_image}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">`:
+      '<div style="width:40px;height:40px;border-radius:8px;background:#0f172a;display:flex;align-items:center;justify-content:center;"><i class="fas fa-image" style="color:#334155;"></i></div>'}
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${o.product_title}</p>
+        <p style="font-size:12px;color:#64748b;">Qty: ${o.quantity_sold} • $${o.sale_price} • ${o.account||'—'}</p>
+      </div>
+      <span style="font-size:11px;color:#475569;">${new Date(o.created_at).toLocaleDateString()}</span>
+    </div>
+  `).join('');
+
+  // Low stock
+  const ls = document.getElementById('low-stock-list');
+  if(data.low_stock_list.length===0){ls.innerHTML='<p style="color:#475569;font-size:14px;"><i class="fas fa-check-circle" style="color:#4ade80;"></i> All products well stocked!</p>';}
+  else ls.innerHTML = data.low_stock_list.map(p=>`
+    <div onclick="window.location.href='/products/${p._id}'" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e293b;cursor:pointer;">
+      ${p.image?`<img src="${p.image}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;">`:
+      '<div style="width:36px;height:36px;border-radius:8px;background:#0f172a;"></div>'}
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.title}</p>
+        <p style="font-size:12px;color:#f87171;">Only ${p.quantity} left (threshold: ${p.low_stock_threshold})</p>
+      </div>
+    </div>
+  `).join('');
+
+  // Recent products
+  const rp = document.getElementById('recent-products');
+  rp.innerHTML = data.recent_products.map(p=>`
+    <div onclick="window.location.href='/products/${p._id}'" style="background:#0f172a;border:1px solid #334155;border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='#334155'">
+      <div style="height:120px;background:#1e293b;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        ${p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;">`:
+        '<i class="fas fa-image" style="font-size:32px;color:#334155;"></i>'}
+      </div>
+      <div style="padding:10px;">
+        <p style="font-size:13px;font-weight:600;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.title}</p>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:12px;color:#64748b;">Qty: ${p.quantity}</span>
+          <span style="font-size:12px;color:#818cf8;">${p.link_count} link${p.link_count!==1?'s':''}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+loadDashboard();
+</script>
+{% endblock %}

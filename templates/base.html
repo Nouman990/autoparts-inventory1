@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}AutoParts Inventory{% endblock %}</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  *{font-family:'Inter',sans-serif;}
+  .sidebar-link{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;color:#94a3b8;font-weight:500;transition:all .2s;text-decoration:none;}
+  .sidebar-link:hover,.sidebar-link.active{background:rgba(139,92,246,.15);color:#a78bfa;}
+  .sidebar-link.active{background:rgba(139,92,246,.2);color:#c4b5fd;font-weight:600;}
+  .card{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:20px;}
+  .btn-primary{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:10px 20px;border-radius:10px;font-weight:600;border:none;cursor:pointer;transition:opacity .2s;display:inline-flex;align-items:center;gap:8px;}
+  .btn-primary:hover{opacity:.9;}
+  .btn-secondary{background:#334155;color:#cbd5e1;padding:10px 20px;border-radius:10px;font-weight:600;border:none;cursor:pointer;transition:background .2s;display:inline-flex;align-items:center;gap:8px;}
+  .btn-secondary:hover{background:#475569;}
+  .btn-danger{background:#dc2626;color:#fff;padding:10px 20px;border-radius:10px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;}
+  .btn-danger:hover{background:#b91c1c;}
+  .input{background:#0f172a;border:1px solid #334155;color:#e2e8f0;padding:10px 14px;border-radius:10px;width:100%;font-size:14px;outline:none;transition:border .2s;}
+  .input:focus{border-color:#7c3aed;}
+  .input::placeholder{color:#475569;}
+  .label{display:block;font-size:13px;font-weight:600;color:#94a3b8;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+  .badge-pmc{background:#1d4ed8;color:#93c5fd;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+  .badge-powergen{background:#065f46;color:#6ee7b7;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+  .badge-group{background:#7c2d12;color:#fdba74;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:#0f172a;}
+  ::-webkit-scrollbar-thumb{background:#334155;border-radius:3px;}
+  #toast{position:fixed;top:20px;right:20px;z-index:9999;padding:14px 22px;border-radius:12px;font-weight:600;display:none;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.4);}
+</style>
+</head>
+<body style="background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;">
+
+<!-- Sidebar -->
+<aside style="width:240px;min-height:100vh;background:#1e293b;border-right:1px solid #334155;display:flex;flex-direction:column;flex-shrink:0;">
+  <div style="padding:20px 16px;border-bottom:1px solid #334155;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-car-side" style="color:#fff;font-size:16px;"></i>
+      </div>
+      <div>
+        <p style="font-weight:800;font-size:15px;color:#e2e8f0;">AutoParts</p>
+        <p style="font-size:11px;color:#64748b;">Inventory Hub</p>
+      </div>
+    </div>
+  </div>
+  <nav style="padding:16px 12px;flex:1;">
+    <p style="font-size:10px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:1px;padding:0 8px;margin-bottom:8px;">Main Menu</p>
+    <a href="/"        class="sidebar-link {% if request.path=='/' %}active{% endif %}"><i class="fas fa-chart-pie w-5"></i> Dashboard</a>
+    <a href="/products"class="sidebar-link {% if '/products' in request.path %}active{% endif %}"><i class="fas fa-boxes w-5"></i> Inventory</a>
+    <a href="/orders"  class="sidebar-link {% if '/orders' in request.path %}active{% endif %}"><i class="fas fa-shopping-cart w-5"></i> Orders</a>
+    <div style="margin-top:auto;padding-top:20px;border-top:1px solid #334155;margin-top:20px;">
+    <a href="/settings"class="sidebar-link {% if '/settings' in request.path %}active{% endif %}"><i class="fas fa-cog w-5"></i> Settings</a>
+    <a href="#" onclick="logout()" class="sidebar-link"><i class="fas fa-sign-out-alt w-5"></i> Logout</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- Main -->
+<div style="flex:1;overflow-x:hidden;">
+  <!-- Top bar -->
+  <header style="background:#1e293b;border-bottom:1px solid #334155;padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;">
+    <div id="page-title" style="font-weight:700;font-size:18px;color:#e2e8f0;">{% block page_title %}{% endblock %}</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span style="font-size:13px;color:#64748b;">👋 <span id="user-name">{{ session.get('name','User') }}</span></span>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main style="padding:28px;">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+function logout(){
+  fetch('/api/auth/logout',{method:'POST'}).then(()=>window.location.href='/login');
+}
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.style.background=type==='success'?'#16a34a':type==='error'?'#dc2626':'#1d4ed8';
+  t.style.color='#fff';
+  t.innerHTML=(type==='success'?'<i class="fas fa-check-circle"></i>':type==='error'?'<i class="fas fa-exclamation-circle"></i>':'<i class="fas fa-info-circle"></i>')+' '+msg;
+  t.style.display='flex';
+  setTimeout(()=>t.style.display='none',3500);
+}
+async function api(url,opts={}){
+  const res=await fetch(url,{headers:{'Content-Type':'application/json'},...opts});
+  return res.json();
+}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

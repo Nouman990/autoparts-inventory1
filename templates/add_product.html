@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+{% block title %}Add Product{% endblock %}
+{% block page_title %}Add Product{% endblock %}
+
+{% block content %}
+
+<!-- STEP 1: Paste eBay Link -->
+<div id="step1" class="card" style="max-width:600px;margin:0 auto;">
+  <h2 style="font-size:20px;font-weight:800;color:#e2e8f0;margin-bottom:6px;"><i class="fas fa-link" style="color:#818cf8;margin-right:8px;"></i>Paste eBay Listing Link</h2>
+  <p style="color:#64748b;font-size:14px;margin-bottom:20px;">Start by pasting the eBay product URL. We'll check if it's a new or existing product.</p>
+
+  <label class="label">eBay Listing URL</label>
+  <div style="display:flex;gap:8px;">
+    <input id="ebayUrl" type="url" class="input" placeholder="https://www.ebay.com/itm/...">
+    <button onclick="checkLink()" class="btn-primary" style="white-space:nowrap;"><i class="fas fa-arrow-right"></i> Next</button>
+  </div>
+  <div id="link-error" style="display:none;color:#f87171;font-size:13px;margin-top:8px;"></div>
+</div>
+
+<!-- STEP 2: New or Old? -->
+<div id="step2" style="display:none;max-width:600px;margin:24px auto 0;">
+  <div style="background:#1e293b;border:2px solid #7c3aed;border-radius:16px;padding:28px;text-align:center;">
+    <h2 style="font-size:20px;font-weight:800;color:#e2e8f0;margin-bottom:8px;">Is this a new or existing product?</h2>
+    <p style="color:#64748b;font-size:14px;margin-bottom:24px;">Link: <span id="link-preview" style="color:#818cf8;"></span></p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="chooseNew()" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;padding:16px 36px;border-radius:12px;font-size:16px;font-weight:700;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:150px;">
+        <i class="fas fa-plus-circle" style="font-size:24px;"></i> New Product
+        <span style="font-size:12px;font-weight:400;opacity:.8;">Create new listing</span>
+      </button>
+      <button onclick="chooseOld()" style="background:#334155;color:#e2e8f0;padding:16px 36px;border-radius:12px;font-size:16px;font-weight:700;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:150px;">
+        <i class="fas fa-search" style="font-size:24px;"></i> Existing Product
+        <span style="font-size:12px;font-weight:400;opacity:.8;">Add link to existing</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3A: NEW PRODUCT FORM -->
+<div id="step3-new" style="display:none;max-width:860px;margin:24px auto 0;">
+  <div class="card">
+    <h2 style="font-size:20px;font-weight:800;color:#e2e8f0;margin-bottom:20px;"><i class="fas fa-plus-circle" style="color:#818cf8;margin-right:8px;"></i>New Product Details</h2>
+
+    <!-- eBay Links section -->
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:24px;">
+      <p style="font-weight:600;color:#94a3b8;font-size:13px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;">eBay Links</p>
+      <div id="links-list" style="margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input id="new-link-url" type="url" class="input" placeholder="Add another eBay link..." style="flex:1;min-width:200px;">
+        <select id="new-link-account" class="input" style="width:140px;">
+          <option value="PMC">PMC</option>
+          <option value="Powergen">Powergen</option>
+        </select>
+        <button onclick="addLink()" class="btn-secondary"><i class="fas fa-plus"></i> Add</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div style="grid-column:1/-1;">
+        <label class="label">Product Title *</label>
+        <input id="f-title" type="text" class="input" placeholder="e.g. BMW 3 Series E46 Front Brake Pad Set">
+      </div>
+      <div>
+        <label class="label">Part Name *</label>
+        <input id="f-part-name" type="text" class="input" placeholder="e.g. Brake Pad">
+      </div>
+      <div>
+        <label class="label">Part Number</label>
+        <input id="f-part-number" type="text" class="input" placeholder="e.g. BP-1234">
+      </div>
+      <div>
+        <label class="label">Car Make</label>
+        <input id="f-make" type="text" class="input" placeholder="e.g. BMW">
+      </div>
+      <div>
+        <label class="label">Car Model</label>
+        <input id="f-model" type="text" class="input" placeholder="e.g. 3 Series E46">
+      </div>
+      <div>
+        <label class="label">Car Year</label>
+        <input id="f-year" type="text" class="input" placeholder="e.g. 1998-2005">
+      </div>
+      <div>
+        <label class="label">Price ($)</label>
+        <input id="f-price" type="number" step="0.01" class="input" placeholder="0.00">
+      </div>
+      <div>
+        <label class="label">Shipping ($)</label>
+        <input id="f-shipping" type="number" step="0.01" class="input" placeholder="0.00">
+      </div>
+      <div>
+        <label class="label">Quantity *</label>
+        <input id="f-qty" type="number" min="0" class="input" placeholder="1" value="1">
+      </div>
+      <div>
+        <label class="label">Low Stock Alert at</label>
+        <input id="f-low" type="number" min="0" class="input" placeholder="3" value="3">
+      </div>
+      <div style="grid-column:1/-1;">
+        <label class="label">Description</label>
+        <textarea id="f-desc" class="input" rows="3" placeholder="Any extra details..."></textarea>
+      </div>
+    </div>
+
+    <!-- Location -->
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <p style="font-weight:600;color:#94a3b8;font-size:13px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;"><i class="fas fa-map-marker-alt" style="color:#f87171;margin-right:6px;"></i>Storage Location</p>
+      <label class="label">Location (e.g. Shelf B2, Warehouse 1)</label>
+      <input id="f-location" type="text" class="input" placeholder="e.g. Shelf B2" style="margin-bottom:12px;">
+      <label class="label">Location / Warehouse Photos</label>
+      <input id="f-loc-imgs" type="file" accept="image/*" multiple class="input" style="padding:8px;">
+      <div id="loc-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+    </div>
+
+    <!-- Product images -->
+    <div style="margin-bottom:24px;">
+      <label class="label">Product Images</label>
+      <input id="f-imgs" type="file" accept="image/*" multiple class="input" style="padding:8px;">
+      <div id="img-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+    </div>
+
+    <div style="display:flex;gap:12px;">
+      <button onclick="submitNew()" class="btn-primary" id="save-btn"><i class="fas fa-save"></i> Save Product</button>
+      <button onclick="resetAll()" class="btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3B: EXISTING PRODUCT — SEARCH -->
+<div id="step3-old" style="display:none;max-width:860px;margin:24px auto 0;">
+  <div class="card">
+    <h2 style="font-size:20px;font-weight:800;color:#e2e8f0;margin-bottom:6px;"><i class="fas fa-search" style="color:#818cf8;margin-right:8px;"></i>Find Existing Product</h2>
+    <p style="color:#64748b;font-size:14px;margin-bottom:20px;">Search by part name, car make/model, part number, or any keyword.</p>
+
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <input id="search-q" type="text" class="input" placeholder="e.g. BMW brake pad, Alternator Toyota..." onkeydown="if(event.key==='Enter')searchOld()">
+      <button onclick="searchOld()" class="btn-primary"><i class="fas fa-search"></i> Search</button>
+    </div>
+
+    <div id="search-results" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;"></div>
+  </div>
+
+  <!-- Selected product — add link to it -->
+  <div id="add-link-panel" style="display:none;margin-top:16px;" class="card">
+    <h3 style="font-weight:700;color:#e2e8f0;margin-bottom:16px;"><i class="fas fa-link" style="color:#818cf8;margin-right:8px;"></i>Add Link to: <span id="selected-name" style="color:#a78bfa;"></span></h3>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <input id="old-link-url" type="url" class="input" style="flex:1;" placeholder="eBay URL" value="">
+      <select id="old-link-account" class="input" style="width:140px;">
+        <option value="PMC">PMC</option>
+        <option value="Powergen">Powergen</option>
+      </select>
+    </div>
+
+    <div style="display:flex;gap:12px;">
+      <button onclick="addLinkToExisting()" class="btn-primary"><i class="fas fa-link"></i> Add Link</button>
+      <button onclick="window.location.href='/products/'+selectedProductId" class="btn-secondary"><i class="fas fa-eye"></i> View Product</button>
+      <button onclick="document.getElementById('add-link-panel').style.display='none'" class="btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentUrl = '';
+let ebayLinks  = [];
+let selectedProductId = '';
+
+// ── Step 1: check link ────────────────────────────────────────────────────
+async function checkLink(){
+  const url = document.getElementById('ebayUrl').value.trim();
+  const err = document.getElementById('link-error');
+  err.style.display='none';
+  if(!url){ err.textContent='Please enter a URL'; err.style.display='block'; return; }
+  currentUrl = url;
+
+  const data = await api('/api/products/check-link',{method:'POST',body:JSON.stringify({url})});
+
+  document.getElementById('step2').style.display='block';
+  document.getElementById('link-preview').textContent = url.length>60?url.slice(0,60)+'...':url;
+
+  if(data.already_exists){
+    toast('This link is already linked to "'+data.product.title+'"','info');
+  }
+}
+
+// ── Step 2: choose ──────────────────────────────────────────────────────
+function chooseNew(){
+  document.getElementById('step2').style.display='none';
+  document.getElementById('step3-new').style.display='block';
+  // Add first link
+  ebayLinks = [];
+  document.getElementById('links-list').innerHTML='';
+  addLinkToList(currentUrl, document.getElementById('new-link-account').value);
+}
+
+function chooseOld(){
+  document.getElementById('step2').style.display='none';
+  document.getElementById('step3-old').style.display='block';
+  document.getElementById('old-link-url').value = currentUrl;
+  searchOld(); // auto search
+}
+
+// ── Links management (new product) ───────────────────────────────────────
+function addLinkToList(url, account){
+  if(!url) return;
+  const exists = ebayLinks.some(l=>l.url===url);
+  if(exists){ toast('Link already added','error'); return; }
+  ebayLinks.push({url, account, label:''});
+  renderLinks();
+  document.getElementById('new-link-url').value='';
+}
+
+function addLink(){
+  const url = document.getElementById('new-link-url').value.trim();
+  const acc = document.getElementById('new-link-account').value;
+  addLinkToList(url, acc);
+}
+
+function removeLink(index){
+  ebayLinks.splice(index,1);
+  renderLinks();
+}
+
+function renderLinks(){
+  const c = document.getElementById('links-list');
+  if(!ebayLinks.length){ c.innerHTML=''; return; }
+  c.innerHTML = ebayLinks.map((l,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;background:#1e293b;padding:8px 12px;border-radius:10px;">
+      <span class="${l.account==='PMC'?'badge-pmc':'badge-powergen'}">${l.account}</span>
+      <span style="flex:1;font-size:13px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.url}</span>
+      <button onclick="removeLink(${i})" style="background:none;border:none;cursor:pointer;color:#f87171;"><i class="fas fa-times"></i></button>
+    </div>
+  `).join('');
+}
+
+// image previews
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('f-imgs').addEventListener('change',function(){previewImages(this.files,'img-preview');});
+  document.getElementById('f-loc-imgs').addEventListener('change',function(){previewImages(this.files,'loc-preview');});
+});
+
+function previewImages(files, containerId){
+  const c = document.getElementById(containerId);
+  c.innerHTML='';
+  Array.from(files).forEach(file=>{
+    const r=new FileReader(); r.onload=e=>{
+      c.innerHTML+=`<img src="${e.target.result}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #334155;">`;
+    }; r.readAsDataURL(file);
+  });
+}
+
+// ── Submit new product ────────────────────────────────────────────────────
+async function submitNew(){
+  const title = document.getElementById('f-title').value.trim();
+  if(!title){ toast('Title is required','error'); return; }
+  if(!ebayLinks.length){ toast('Add at least one eBay link','error'); return; }
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('part_name',   document.getElementById('f-part-name').value);
+  fd.append('part_number', document.getElementById('f-part-number').value);
+  fd.append('car_make',    document.getElementById('f-make').value);
+  fd.append('car_model',   document.getElementById('f-model').value);
+  fd.append('car_year',    document.getElementById('f-year').value);
+  fd.append('description', document.getElementById('f-desc').value);
+  fd.append('price',       document.getElementById('f-price').value||0);
+  fd.append('shipping',    document.getElementById('f-shipping').value||0);
+  fd.append('quantity',    document.getElementById('f-qty').value||1);
+  fd.append('low_stock_threshold', document.getElementById('f-low').value||3);
+  fd.append('location_text', document.getElementById('f-location').value);
+  fd.append('ebay_links',  JSON.stringify(ebayLinks));
+
+  Array.from(document.getElementById('f-imgs').files).forEach(f=>fd.append('images', f));
+  Array.from(document.getElementById('f-loc-imgs').files).forEach(f=>fd.append('location_images', f));
+
+  try{
+    const res = await fetch('/api/products/add',{method:'POST',body:fd});
+    const data = await res.json();
+    if(data.success){
+      toast('Product saved!','success');
+      setTimeout(()=>window.location.href='/products/'+data.product_id, 1000);
+    } else {
+      toast(data.error||'Error saving','error');
+      btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Save Product';
+    }
+  }catch(e){
+    toast('Error saving product','error');
+    btn.disabled=false; btn.innerHTML='<i class="fas fa-save"></i> Save Product';
+  }
+}
+
+// ── Search existing ───────────────────────────────────────────────────────
+async function searchOld(){
+  const q = document.getElementById('search-q').value.trim();
+  const data = await api(`/api/products/search?q=${encodeURIComponent(q)}&per_page=12`);
+  const c = document.getElementById('search-results');
+
+  if(!data.products||!data.products.length){
+    c.innerHTML='<div style="color:#64748b;font-size:14px;grid-column:1/-1;">No products found. Try different keywords.</div>';
+    return;
+  }
+
+  c.innerHTML = data.products.map(p=>`
+    <div onclick="selectProduct('${p._id}','${p.title.replace(/'/g,"\\'")}','${(p.images||[''])[0]}')" 
+      style="background:#0f172a;border:1px solid #334155;border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .2s;"
+      onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='#334155'">
+      <div style="height:120px;background:#1e293b;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        ${p.images&&p.images[0]?`<img src="${p.images[0]}" style="width:100%;height:100%;object-fit:cover;">`:
+        '<i class="fas fa-image" style="font-size:32px;color:#334155;"></i>'}
+      </div>
+      <div style="padding:10px;">
+        <p style="font-size:13px;font-weight:600;color:#e2e8f0;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.title}</p>
+        <p style="font-size:11px;color:#64748b;">${p.car_make} ${p.car_model} ${p.car_year}</p>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:12px;color:${p.quantity===0?'#f87171':'#4ade80'};">Qty: ${p.quantity}</span>
+          <span style="font-size:12px;color:#818cf8;">${p.link_count} link${p.link_count!==1?'s':''}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectProduct(id, name){
+  selectedProductId = id;
+  document.getElementById('selected-name').textContent = name;
+  document.getElementById('add-link-panel').style.display='block';
+  document.getElementById('add-link-panel').scrollIntoView({behavior:'smooth'});
+}
+
+async function addLinkToExisting(){
+  const url = document.getElementById('old-link-url').value.trim();
+  const account = document.getElementById('old-link-account').value;
+  if(!url){ toast('URL required','error'); return; }
+  const data = await api(`/api/products/${selectedProductId}/links`,{method:'POST',body:JSON.stringify({url,account})});
+  if(data.success){
+    toast('Link added successfully!','success');
+    setTimeout(()=>window.location.href='/products/'+selectedProductId, 1000);
+  } else toast(data.error||'Error','error');
+}
+
+function resetAll(){
+  window.location.href='/products';
+}
+</script>
+{% endblock %}

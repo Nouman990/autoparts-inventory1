@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Inventory{% endblock %}
+{% block page_title %}Inventory{% endblock %}
+
+{% block content %}
+<!-- Search bar + Add button -->
+<div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center;">
+  <input id="search-input" type="text" class="input" placeholder="Search by part name, car make, model, year, part number..." style="flex:1;min-width:260px;" oninput="search()">
+  <button onclick="window.location.href='/products/add'" class="btn-primary"><i class="fas fa-plus"></i> Add Product</button>
+</div>
+
+<!-- Filter chips -->
+<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+  <button onclick="setFilter('all')" id="f-all" style="padding:6px 16px;border-radius:20px;border:1px solid #7c3aed;background:rgba(124,58,237,.2);color:#a78bfa;font-size:13px;font-weight:600;cursor:pointer;">All</button>
+  <button onclick="setFilter('low')" id="f-low" style="padding:6px 16px;border-radius:20px;border:1px solid #334155;background:transparent;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;"><i class="fas fa-exclamation-triangle" style="color:#fbbf24;margin-right:4px;"></i>Low Stock</button>
+  <button onclick="setFilter('oos')" id="f-oos" style="padding:6px 16px;border-radius:20px;border:1px solid #334155;background:transparent;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;"><i class="fas fa-times-circle" style="color:#f87171;margin-right:4px;"></i>Out of Stock</button>
+  <button onclick="setFilter('group')" id="f-group" style="padding:6px 16px;border-radius:20px;border:1px solid #334155;background:transparent;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;"><i class="fas fa-layer-group" style="color:#818cf8;margin-right:4px;"></i>Group (2+ links)</button>
+</div>
+
+<!-- Results count -->
+<p id="result-count" style="color:#475569;font-size:14px;margin-bottom:16px;"></p>
+
+<!-- Products Grid -->
+<div id="products-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;"></div>
+
+<!-- Pagination -->
+<div id="pagination" style="display:flex;gap:8px;margin-top:24px;justify-content:center;flex-wrap:wrap;"></div>
+
+<!-- Quick update qty modal -->
+<div id="qty-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;">
+  <div class="card" style="width:100%;max-width:380px;margin:20px;">
+    <h3 style="font-weight:700;color:#e2e8f0;margin-bottom:4px;" id="qty-modal-title">Update Quantity</h3>
+    <p style="color:#64748b;font-size:13px;margin-bottom:16px;" id="qty-modal-sub"></p>
+    <label class="label">New Quantity</label>
+    <input id="qty-new" type="number" min="0" class="input" style="margin-bottom:16px;">
+    <div style="display:flex;gap:8px;">
+      <button onclick="saveQty()" class="btn-primary" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Save</button>
+      <button onclick="closeQtyModal()" class="btn-secondary" style="flex:1;justify-content:center;"><i class="fas fa-times"></i> Cancel</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allProducts = [];
+let currentPage = 1;
+let currentFilter = 'all';
+let searchTimer = null;
+let qtyProductId = '';
+
+async function load(page=1){
+  currentPage=page;
+  const q = document.getElementById('search-input').value.trim();
+  const data = await api(`/api/products/search?q=${encodeURIComponent(q)}&page=${page}&per_page=20`);
+  allProducts = data.products||[];
+  renderProducts();
+  document.getElementById('result-count').textContent = `${data.total} products found`;
+  renderPagination(data.pages, data.page);
+}
+
+function search(){
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=>load(1), 300);
+}
+
+function setFilter(f){
+  currentFilter=f;
+  ['all','low','oos','group'].forEach(x=>{
+    const btn=document.getElementById('f-'+x);
+    if(x===f){btn.style.background='rgba(124,58,237,.2)';btn.style.borderColor='#7c3aed';btn.style.color='#a78bfa';}
+    else{btn.style.background='transparent';btn.style.borderColor='#334155';btn.style.color='#64748b';}
+  });
+  renderProducts();
+}
+
+function renderProducts(){
+  let list = allProducts;
+  if(currentFilter==='low')   list=list.filter(p=>p.quantity>0&&p.quantity<=p.low_stock_threshold);
+  if(currentFilter==='oos')   list=list.filter(p=>p.quantity===0);
+  if(currentFilter==='group') list=list.filter(p=>p.is_group);
+
+  const c=document.getElementById('products-grid');
+  if(!list.length){
+    c.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:#475569;"><i class="fas fa-search" style="font-size:40px;margin-bottom:12px;display:block;"></i>No products found</div>';
+    return;
+  }
+  c.innerHTML = list.map(p=>{
+    const qColor = p.quantity===0?'#f87171':p.quantity<=p.low_stock_threshold?'#fbbf24':'#4ade80';
+    const qBg    = p.quantity===0?'rgba(239,68,68,.1)':p.quantity<=p.low_stock_threshold?'rgba(251,191,36,.1)':'rgba(74,222,128,.1)';
+    return `
+    <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;"
+      onmouseover="this.style.borderColor='#7c3aed';this.style.transform='translateY(-2px)'"
+      onmouseout="this.style.borderColor='#334155';this.style.transform='none'">
+      <!-- Image -->
+      <div onclick="window.location.href='/products/${p._id}'" style="height:160px;background:#0f172a;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+        ${p.images&&p.images[0]?`<img src="${p.images[0]}" style="width:100%;height:100%;object-fit:cover;">`:
+        '<i class="fas fa-image" style="font-size:40px;color:#334155;"></i>'}
+        ${p.is_group?`<span class="badge-group" style="position:absolute;top:8px;left:8px;"><i class="fas fa-layer-group" style="margin-right:3px;"></i>${p.link_count} links</span>`:''}
+      </div>
+      <!-- Info -->
+      <div style="padding:14px;" onclick="window.location.href='/products/${p._id}'">
+        <p style="font-weight:700;color:#e2e8f0;font-size:14px;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.title}</p>
+        ${p.car_make?`<p style="font-size:12px;color:#64748b;margin-bottom:8px;">${p.car_make} ${p.car_model} ${p.car_year}</p>`:''}
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:15px;font-weight:700;color:#e2e8f0;">$${p.price}</span>
+          <span style="background:${qBg};color:${qColor};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Qty: ${p.quantity}</span>
+        </div>
+      </div>
+      <!-- Actions -->
+      <div style="display:flex;border-top:1px solid #334155;">
+        <button onclick="openQtyModal('${p._id}','${p.title.replace(/'/g,"\\'")}',${p.quantity})" style="flex:1;background:none;border:none;border-right:1px solid #334155;padding:10px;cursor:pointer;color:#64748b;font-size:13px;transition:color .2s;" onmouseover="this.style.color='#e2e8f0'" onmouseout="this.style.color='#64748b'">
+          <i class="fas fa-edit" style="margin-right:4px;"></i>Qty
+        </button>
+        <button onclick="window.location.href='/products/${p._id}'" style="flex:1;background:none;border:none;padding:10px;cursor:pointer;color:#64748b;font-size:13px;transition:color .2s;" onmouseover="this.style.color='#818cf8'" onmouseout="this.style.color='#64748b'">
+          <i class="fas fa-eye" style="margin-right:4px;"></i>View
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPagination(pages, current){
+  const c=document.getElementById('pagination');
+  if(pages<=1){c.innerHTML='';return;}
+  let html='';
+  for(let i=1;i<=pages;i++){
+    html+=`<button onclick="load(${i})" style="padding:6px 14px;border-radius:8px;border:1px solid ${i===current?'#7c3aed':'#334155'};background:${i===current?'rgba(124,58,237,.2)':'transparent'};color:${i===current?'#a78bfa':'#64748b'};cursor:pointer;font-weight:600;">${i}</button>`;
+  }
+  c.innerHTML=html;
+}
+
+// Qty modal
+function openQtyModal(id, title, currentQty){
+  qtyProductId=id;
+  document.getElementById('qty-modal-title').textContent='Update Quantity';
+  document.getElementById('qty-modal-sub').textContent=title.length>50?title.slice(0,50)+'...':title;
+  document.getElementById('qty-new').value=currentQty;
+  document.getElementById('qty-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('qty-new').select(),50);
+}
+
+async function saveQty(){
+  const qty=parseInt(document.getElementById('qty-new').value)||0;
+  const data=await api(`/api/products/${qtyProductId}/quantity`,{method:'PUT',body:JSON.stringify({quantity:qty})});
+  if(data.success){toast('Quantity updated!','success');closeQtyModal();load(currentPage);}
+  else toast(data.error||'Error','error');
+}
+
+function closeQtyModal(){document.getElementById('qty-modal').style.display='none';}
+
+document.getElementById('qty-modal').addEventListener('click',function(e){if(e.target===this)closeQtyModal();});
+
+load();
+</script>
+{% endblock %}
