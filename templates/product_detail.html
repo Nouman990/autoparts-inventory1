@@ -40,8 +40,9 @@
 
 <!-- Edit Product Modal -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;overflow-y:auto;">
-  <div class="card" style="width:100%;max-width:700px;margin:20px;max-height:90vh;overflow-y:auto;">
+  <div class="card" style="width:100%;max-width:800px;margin:20px;max-height:90vh;overflow-y:auto;">
     <h3 style="font-weight:800;color:#e2e8f0;margin-bottom:20px;"><i class="fas fa-edit" style="color:#818cf8;margin-right:8px;"></i>Edit Product</h3>
+    
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div style="grid-column:1/-1;"><label class="label">Title</label><input id="e-title" class="input"></div>
       <div><label class="label">Part Name</label><input id="e-part-name" class="input"></div>
@@ -67,13 +68,30 @@
       <div style="grid-column:1/-1;"><label class="label">Tags (comma separated)</label><input id="e-tags" class="input" placeholder="e.g. brake pad, disc brake"></div>
       <div style="grid-column:1/-1;"><label class="label">Location</label><input id="e-location" class="input"></div>
       <div style="grid-column:1/-1;"><label class="label">Description</label><textarea id="e-desc" class="input" rows="3"></textarea></div>
-      
-      <!-- Add More Images -->
-      <div style="grid-column:1/-1;"><label class="label">Add More Product Images</label><input id="e-add-imgs" type="file" accept="image/*" multiple class="input" style="padding:8px;"></div>
-      <div style="grid-column:1/-1;"><label class="label">Add More Location Images</label><input id="e-add-loc-imgs" type="file" accept="image/*" multiple class="input" style="padding:8px;"></div>
     </div>
+
+    <!-- EXISTING PRODUCT IMAGES WITH DELETE -->
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid #334155;">
+      <p style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
+        <i class="fas fa-images" style="margin-right:6px;"></i>Product Images
+      </p>
+      <div id="existing-images" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <label class="label" style="margin-top:12px;">Add More Product Images</label>
+      <input id="e-add-imgs" type="file" accept="image/*" multiple class="input" style="padding:8px;">
+    </div>
+
+    <!-- EXISTING LOCATION IMAGES WITH DELETE -->
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid #334155;">
+      <p style="font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
+        <i class="fas fa-map-marker-alt" style="color:#f87171;margin-right:6px;"></i>Location Images
+      </p>
+      <div id="existing-loc-images" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <label class="label" style="margin-top:12px;">Add More Location Images</label>
+      <input id="e-add-loc-imgs" type="file" accept="image/*" multiple class="input" style="padding:8px;">
+    </div>
+
     <div style="display:flex;gap:8px;margin-top:20px;">
-      <button onclick="saveEdit()" class="btn-primary" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Save</button>
+      <button onclick="saveEdit()" class="btn-primary" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Save Changes</button>
       <button onclick="closeEditModal()" class="btn-secondary" style="flex:1;justify-content:center;"><i class="fas fa-times"></i> Cancel</button>
     </div>
   </div>
@@ -102,6 +120,8 @@
 <script>
 const PID = '{{ product_id }}';
 let product = null;
+let imagesToDelete = [];
+let locationImagesToDelete = [];
 
 function openLightbox(src) {
   document.getElementById('lightbox-img').src = src;
@@ -240,7 +260,11 @@ function render(){
   `;
 
   loadOrders();
-  // Fill edit modal
+  fillEditModal();
+}
+
+function fillEditModal(){
+  const p = product;
   document.getElementById('e-title').value       = p.title;
   document.getElementById('e-part-name').value   = p.part_name;
   document.getElementById('e-part-number').value = p.part_number;
@@ -257,6 +281,59 @@ function render(){
   document.getElementById('e-location').value    = p.location_text;
   document.getElementById('e-desc').value        = p.description;
   document.getElementById('o-price').value       = p.price;
+
+  // Render existing images with DELETE button
+  renderExistingImages();
+}
+
+function renderExistingImages(){
+  const imgContainer = document.getElementById('existing-images');
+  const locContainer = document.getElementById('existing-loc-images');
+  
+  // Product images
+  if(product.images && product.images.length){
+    imgContainer.innerHTML = product.images.map((img,i)=>`
+      <div style="position:relative;width:100px;height:100px;">
+        <img src="${img}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:2px solid #334155;">
+        <button onclick="markImageForDelete('${img}',${i})" style="position:absolute;top:4px;right:4px;background:#dc2626;border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;" title="Delete image">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `).join('');
+  } else {
+    imgContainer.innerHTML = '<p style="color:#64748b;font-size:13px;">No product images yet</p>';
+  }
+
+  // Location images
+  if(product.location_images && product.location_images.length){
+    locContainer.innerHTML = product.location_images.map((img,i)=>`
+      <div style="position:relative;width:100px;height:100px;">
+        <img src="${img}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:2px solid #334155;">
+        <button onclick="markLocationImageForDelete('${img}',${i})" style="position:absolute;top:4px;right:4px;background:#dc2626;border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;" title="Delete image">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `).join('');
+  } else {
+    locContainer.innerHTML = '<p style="color:#64748b;font-size:13px;">No location images yet</p>';
+  }
+}
+
+function markImageForDelete(img, index){
+  if(!confirm('Delete this image?')) return;
+  // Remove from display
+  product.images.splice(index, 1);
+  imagesToDelete.push(img);
+  renderExistingImages();
+  toast('Image will be deleted when you save','info');
+}
+
+function markLocationImageForDelete(img, index){
+  if(!confirm('Delete this location image?')) return;
+  product.location_images.splice(index, 1);
+  locationImagesToDelete.push(img);
+  renderExistingImages();
+  toast('Image will be deleted when you save','info');
 }
 
 async function loadOrders(){
@@ -320,8 +397,15 @@ async function deleteOrder(oid){
 }
 
 // ── Edit modal ─────────────────────────────────────────────────────────────
-function openEditModal(){ document.getElementById('edit-modal').style.display='flex'; }
-function closeEditModal(){ document.getElementById('edit-modal').style.display='none'; }
+function openEditModal(){ 
+  imagesToDelete = [];
+  locationImagesToDelete = [];
+  document.getElementById('edit-modal').style.display='flex'; 
+}
+
+function closeEditModal(){ 
+  document.getElementById('edit-modal').style.display='none'; 
+}
 
 async function saveEdit(){
   const fd = new FormData();
@@ -341,21 +425,31 @@ async function saveEdit(){
   fd.append('location_text', document.getElementById('e-location').value);
   fd.append('description', document.getElementById('e-desc').value);
 
-  // Add new images (will append to existing)
-  Array.from(document.getElementById('e-add-imgs').files).forEach(f=>fd.append('images', f));
-  Array.from(document.getElementById('e-add-loc-imgs').files).forEach(f=>fd.append('location_images', f));
+  // Send remaining images after deletions
+  fd.append('images', JSON.stringify(product.images));
+  fd.append('location_images', JSON.stringify(product.location_images));
+
+  // Add new images
+  Array.from(document.getElementById('e-add-imgs').files).forEach(f=>fd.append('new_images', f));
+  Array.from(document.getElementById('e-add-loc-imgs').files).forEach(f=>fd.append('new_location_images', f));
 
   try{
     const res = await fetch('/api/products/'+PID, {method:'PUT', body:fd});
     const data = await res.json();
-    if(data.success){toast('Saved!','success');closeEditModal();loadProduct();}
+    if(data.success){
+      toast('Saved!','success');
+      closeEditModal();
+      imagesToDelete = [];
+      locationImagesToDelete = [];
+      loadProduct();
+    }
     else toast(data.error||'Error','error');
   }catch(e){
     toast('Error saving','error');
   }
 }
 
-// Quick qty modal (inline)
+// Quick qty modal
 function openQtyModal(){
   const v = parseInt(prompt('New quantity:', product.quantity));
   if(isNaN(v)||v<0) return;

@@ -246,21 +246,27 @@ def update_product(pid):
             if ebay_links is not None:
                 upd['ebay_links'] = ebay_links
 
-            # Get existing images
-            p = database.db.products.find_one({'_id': ObjectId(pid)})
-            existing_images = p.get('images', []) if p else []
-            existing_loc    = p.get('location_images', []) if p else []
+            # Handle images - get remaining images after frontend deletion
+            try:
+                remaining_images = json.loads(data.get('images', '[]'))
+            except:
+                remaining_images = []
+            
+            try:
+                remaining_loc = json.loads(data.get('location_images', '[]'))
+            except:
+                remaining_loc = []
 
-            # Add new images (append to existing)
-            for f in request.files.getlist('images'):
+            # Add new images to remaining
+            for f in request.files.getlist('new_images'):
                 url = save_image(f)
-                if url: existing_images.append(url)
-            for f in request.files.getlist('location_images'):
+                if url: remaining_images.append(url)
+            for f in request.files.getlist('new_location_images'):
                 url = save_image(f)
-                if url: existing_loc.append(url)
+                if url: remaining_loc.append(url)
 
-            upd['images']          = existing_images
-            upd['location_images'] = existing_loc
+            upd['images']          = remaining_images
+            upd['location_images'] = remaining_loc
         else:
             data = request.get_json()
             upd = {'updated_at': datetime.utcnow()}
