@@ -7,39 +7,29 @@
   <div style="text-align:center;padding:60px;color:#475569;"><i class="fas fa-spinner fa-spin" style="font-size:30px;"></i></div>
 </div>
 
+<!-- Image Lightbox -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;align-items:center;justify-content:center;cursor:pointer;" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" style="max-width:90%;max-height:90%;border-radius:8px;">
+  <button onclick="closeLightbox()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:30px;cursor:pointer;width:50px;height:50px;border-radius:50%;"><i class="fas fa-times"></i></button>
+</div>
+
 <!-- Add Order Modal -->
 <div id="order-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;">
   <div class="card" style="width:100%;max-width:440px;margin:20px;">
     <h3 style="font-weight:800;color:#e2e8f0;margin-bottom:4px;"><i class="fas fa-shopping-cart" style="color:#fb923c;margin-right:8px;"></i>Add Order</h3>
     <p style="color:#64748b;font-size:13px;margin-bottom:20px;">This will reduce the product quantity automatically.</p>
     <div style="display:grid;gap:12px;">
-      <div>
-        <label class="label">Qty Sold *</label>
-        <input id="o-qty" type="number" min="1" value="1" class="input">
-      </div>
-      <div>
-        <label class="label">Sale Price ($)</label>
-        <input id="o-price" type="number" step="0.01" class="input">
-      </div>
-      <div>
-        <label class="label">Account</label>
+      <div><label class="label">Qty Sold *</label><input id="o-qty" type="number" min="1" value="1" class="input"></div>
+      <div><label class="label">Sale Price ($)</label><input id="o-price" type="number" step="0.01" class="input"></div>
+      <div><label class="label">Account</label>
         <select id="o-account" class="input">
           <option value="PMC">PMC</option>
           <option value="Powergen">Powergen</option>
         </select>
       </div>
-      <div>
-        <label class="label">eBay Order ID <span style="color:#475569;font-weight:400;">(optional)</span></label>
-        <input id="o-ebay-id" type="text" class="input" placeholder="e.g. 26-12345-67890">
-      </div>
-      <div>
-        <label class="label">Buyer Name <span style="color:#475569;font-weight:400;">(optional)</span></label>
-        <input id="o-buyer" type="text" class="input" placeholder="eBay username">
-      </div>
-      <div>
-        <label class="label">Note <span style="color:#475569;font-weight:400;">(optional)</span></label>
-        <input id="o-note" type="text" class="input" placeholder="Any notes...">
-      </div>
+      <div><label class="label">eBay Order ID</label><input id="o-ebay-id" type="text" class="input" placeholder="e.g. 26-12345-67890"></div>
+      <div><label class="label">Buyer Name</label><input id="o-buyer" type="text" class="input" placeholder="eBay username"></div>
+      <div><label class="label">Note</label><input id="o-note" type="text" class="input" placeholder="Any notes..."></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:20px;">
       <button onclick="submitOrder()" class="btn-primary" style="flex:1;justify-content:center;"><i class="fas fa-check"></i> Add Order</button>
@@ -50,12 +40,23 @@
 
 <!-- Edit Product Modal -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;overflow-y:auto;">
-  <div class="card" style="width:100%;max-width:600px;margin:20px;">
+  <div class="card" style="width:100%;max-width:700px;margin:20px;max-height:90vh;overflow-y:auto;">
     <h3 style="font-weight:800;color:#e2e8f0;margin-bottom:20px;"><i class="fas fa-edit" style="color:#818cf8;margin-right:8px;"></i>Edit Product</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div style="grid-column:1/-1;"><label class="label">Title</label><input id="e-title" class="input"></div>
       <div><label class="label">Part Name</label><input id="e-part-name" class="input"></div>
       <div><label class="label">Part Number</label><input id="e-part-number" class="input"></div>
+      <div><label class="label">Side</label>
+        <select id="e-side" class="input">
+          <option value="">Not Applicable</option>
+          <option value="Left">Left Side</option>
+          <option value="Right">Right Side</option>
+          <option value="Front">Front</option>
+          <option value="Back">Back</option>
+          <option value="Both">Both Sides</option>
+        </select>
+      </div>
+      <div><label class="label">Color</label><input id="e-color" class="input" placeholder="e.g. Red, Black"></div>
       <div><label class="label">Car Make</label><input id="e-make" class="input"></div>
       <div><label class="label">Car Model</label><input id="e-model" class="input"></div>
       <div><label class="label">Car Year</label><input id="e-year" class="input"></div>
@@ -63,8 +64,13 @@
       <div><label class="label">Shipping ($)</label><input id="e-shipping" type="number" step="0.01" class="input"></div>
       <div><label class="label">Quantity</label><input id="e-qty" type="number" min="0" class="input"></div>
       <div><label class="label">Low Stock Alert</label><input id="e-low" type="number" min="0" class="input"></div>
+      <div style="grid-column:1/-1;"><label class="label">Tags (comma separated)</label><input id="e-tags" class="input" placeholder="e.g. brake pad, disc brake"></div>
       <div style="grid-column:1/-1;"><label class="label">Location</label><input id="e-location" class="input"></div>
       <div style="grid-column:1/-1;"><label class="label">Description</label><textarea id="e-desc" class="input" rows="3"></textarea></div>
+      
+      <!-- Add More Images -->
+      <div style="grid-column:1/-1;"><label class="label">Add More Product Images</label><input id="e-add-imgs" type="file" accept="image/*" multiple class="input" style="padding:8px;"></div>
+      <div style="grid-column:1/-1;"><label class="label">Add More Location Images</label><input id="e-add-loc-imgs" type="file" accept="image/*" multiple class="input" style="padding:8px;"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:20px;">
       <button onclick="saveEdit()" class="btn-primary" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Save</button>
@@ -97,6 +103,16 @@
 const PID = '{{ product_id }}';
 let product = null;
 
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').style.display = 'flex';
+}
+
+function closeLightbox(e) {
+  if(e) e.stopPropagation();
+  document.getElementById('lightbox').style.display = 'none';
+}
+
 async function loadProduct(){
   const data = await api('/api/products/'+PID);
   if(!data.success){ document.getElementById('product-content').innerHTML='<p style="color:#f87171;padding:40px;text-align:center;">Product not found</p>'; return; }
@@ -125,14 +141,14 @@ function render(){
     <!-- LEFT: Images -->
     <div>
       <!-- Main image -->
-      <div style="background:#0f172a;border:1px solid #334155;border-radius:14px;height:280px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;">
+      <div style="background:#0f172a;border:1px solid #334155;border-radius:14px;height:280px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;cursor:pointer;" onclick="openLightbox('${p.images&&p.images[0]?p.images[0]:''}')">
         ${p.images&&p.images[0]?`<img id="main-img" src="${p.images[0]}" style="width:100%;height:100%;object-fit:contain;">`:
         '<i class="fas fa-image" style="font-size:60px;color:#334155;"></i>'}
       </div>
       <!-- Thumbnails -->
       ${p.images&&p.images.length>1?`
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        ${p.images.map(img=>`<img src="${img}" onclick="document.getElementById('main-img').src='${img}'" style="width:56px;height:56px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='transparent'">`).join('')}
+        ${p.images.map(img=>`<img src="${img}" onclick="document.getElementById('main-img').src='${img}';openLightbox('${img}')" style="width:56px;height:56px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='transparent'">`).join('')}
       </div>`:''}
 
       <!-- Location images -->
@@ -140,7 +156,7 @@ function render(){
       <div style="margin-top:16px;">
         <p style="font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;"><i class="fas fa-map-marker-alt" style="color:#f87171;margin-right:4px;"></i>Location Photos</p>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${p.location_images.map(img=>`<img src="${img}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #334155;">`).join('')}
+          ${p.location_images.map(img=>`<img src="${img}" onclick="openLightbox('${img}')" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #334155;cursor:pointer;">`).join('')}
         </div>
       </div>`:''}
     </div>
@@ -149,12 +165,23 @@ function render(){
     <div>
       <h1 style="font-size:22px;font-weight:800;color:#e2e8f0;margin-bottom:8px;">${p.title}</h1>
 
-      <!-- Car info -->
-      ${p.car_make||p.car_model?`
+      <!-- Car info + Side + Color -->
+      ${p.car_make||p.car_model||p.side||p.color?`
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
         ${p.car_make?`<span style="background:#1e3a8a;color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;"><i class="fas fa-car" style="margin-right:4px;"></i>${p.car_make}</span>`:''}
         ${p.car_model?`<span style="background:#1e3a8a;color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">${p.car_model}</span>`:''}
         ${p.car_year?`<span style="background:#1e3a8a;color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">${p.car_year}</span>`:''}
+        ${p.side?`<span style="background:#065f46;color:#6ee7b7;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;"><i class="fas fa-arrows-alt-h" style="margin-right:4px;"></i>${p.side}</span>`:''}
+        ${p.color?`<span style="background:#7c2d12;color:#fdba74;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;"><i class="fas fa-palette" style="margin-right:4px;"></i>${p.color}</span>`:''}
+      </div>`:''}
+
+      <!-- Tags -->
+      ${p.tags&&p.tags.length?`
+      <div style="margin-bottom:12px;">
+        <p style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Tags</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${p.tags.map(t=>`<span style="background:rgba(139,92,246,.15);color:#a78bfa;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;">#${t}</span>`).join('')}
+        </div>
       </div>`:''}
 
       <!-- Part info -->
@@ -217,6 +244,9 @@ function render(){
   document.getElementById('e-title').value       = p.title;
   document.getElementById('e-part-name').value   = p.part_name;
   document.getElementById('e-part-number').value = p.part_number;
+  document.getElementById('e-side').value        = p.side||'';
+  document.getElementById('e-color').value       = p.color||'';
+  document.getElementById('e-tags').value        = (p.tags||[]).join(', ');
   document.getElementById('e-make').value        = p.car_make;
   document.getElementById('e-model').value       = p.car_model;
   document.getElementById('e-year').value        = p.car_year;
@@ -294,22 +324,35 @@ function openEditModal(){ document.getElementById('edit-modal').style.display='f
 function closeEditModal(){ document.getElementById('edit-modal').style.display='none'; }
 
 async function saveEdit(){
-  const data=await api('/api/products/'+PID,{method:'PUT',body:JSON.stringify({
-    title:       document.getElementById('e-title').value,
-    part_name:   document.getElementById('e-part-name').value,
-    part_number: document.getElementById('e-part-number').value,
-    car_make:    document.getElementById('e-make').value,
-    car_model:   document.getElementById('e-model').value,
-    car_year:    document.getElementById('e-year').value,
-    price:       parseFloat(document.getElementById('e-price').value)||0,
-    shipping:    parseFloat(document.getElementById('e-shipping').value)||0,
-    quantity:    parseInt(document.getElementById('e-qty').value)||0,
-    low_stock_threshold: parseInt(document.getElementById('e-low').value)||3,
-    location_text: document.getElementById('e-location').value,
-    description: document.getElementById('e-desc').value
-  })});
-  if(data.success){toast('Saved!','success');closeEditModal();loadProduct();}
-  else toast(data.error||'Error','error');
+  const fd = new FormData();
+  fd.append('title', document.getElementById('e-title').value);
+  fd.append('part_name', document.getElementById('e-part-name').value);
+  fd.append('part_number', document.getElementById('e-part-number').value);
+  fd.append('side', document.getElementById('e-side').value);
+  fd.append('color', document.getElementById('e-color').value);
+  fd.append('tags', document.getElementById('e-tags').value);
+  fd.append('car_make', document.getElementById('e-make').value);
+  fd.append('car_model', document.getElementById('e-model').value);
+  fd.append('car_year', document.getElementById('e-year').value);
+  fd.append('price', parseFloat(document.getElementById('e-price').value)||0);
+  fd.append('shipping', parseFloat(document.getElementById('e-shipping').value)||0);
+  fd.append('quantity', parseInt(document.getElementById('e-qty').value)||0);
+  fd.append('low_stock_threshold', parseInt(document.getElementById('e-low').value)||3);
+  fd.append('location_text', document.getElementById('e-location').value);
+  fd.append('description', document.getElementById('e-desc').value);
+
+  // Add new images (will append to existing)
+  Array.from(document.getElementById('e-add-imgs').files).forEach(f=>fd.append('images', f));
+  Array.from(document.getElementById('e-add-loc-imgs').files).forEach(f=>fd.append('location_images', f));
+
+  try{
+    const res = await fetch('/api/products/'+PID, {method:'PUT', body:fd});
+    const data = await res.json();
+    if(data.success){toast('Saved!','success');closeEditModal();loadProduct();}
+    else toast(data.error||'Error','error');
+  }catch(e){
+    toast('Error saving','error');
+  }
 }
 
 // Quick qty modal (inline)
