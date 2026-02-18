@@ -37,6 +37,9 @@ def serialize(p, include_links=True):
         'title':        p.get('title', ''),
         'part_name':    p.get('part_name', ''),
         'part_number':  p.get('part_number', ''),
+        'side':         p.get('side', ''),
+        'color':        p.get('color', ''),
+        'tags':         p.get('tags', []),
         'car_make':     p.get('car_make', ''),
         'car_model':    p.get('car_model', ''),
         'car_year':     p.get('car_year', ''),
@@ -123,6 +126,9 @@ def add_product():
     title         = request.form.get('title', '').strip()
     part_name     = request.form.get('part_name', '').strip()
     part_number   = request.form.get('part_number', '').strip()
+    side          = request.form.get('side', '').strip()
+    color         = request.form.get('color', '').strip()
+    tags_str      = request.form.get('tags', '').strip()
     car_make      = request.form.get('car_make', '').strip()
     car_model     = request.form.get('car_model', '').strip()
     car_year      = request.form.get('car_year', '').strip()
@@ -132,6 +138,9 @@ def add_product():
     quantity      = int(request.form.get('quantity', 1) or 1)
     low_stock     = int(request.form.get('low_stock_threshold', 3) or 3)
     location_text = request.form.get('location_text', '').strip()
+
+    # Parse tags
+    tags = [t.strip() for t in tags_str.split(',') if t.strip()] if tags_str else []
 
     # eBay links (JSON string array from form)
     import json
@@ -159,6 +168,9 @@ def add_product():
         'title':        title,
         'part_name':    part_name,
         'part_number':  part_number,
+        'side':         side,
+        'color':        color,
+        'tags':         tags,
         'car_make':     car_make,
         'car_model':    car_model,
         'car_year':     car_year,
@@ -203,6 +215,11 @@ def update_product(pid):
             price    = float(data.get('price', 0) or 0)
             shipping = float(data.get('shipping', 0) or 0)
             quantity = int(data.get('quantity', 0) or 0)
+            
+            # Parse tags
+            tags_str = data.get('tags', '').strip()
+            tags = [t.strip() for t in tags_str.split(',') if t.strip()] if tags_str else []
+            
             try:
                 ebay_links = json.loads(data.get('ebay_links', '[]'))
             except:
@@ -212,6 +229,9 @@ def update_product(pid):
                 'title':        data.get('title', ''),
                 'part_name':    data.get('part_name', ''),
                 'part_number':  data.get('part_number', ''),
+                'side':         data.get('side', ''),
+                'color':        data.get('color', ''),
+                'tags':         tags,
                 'car_make':     data.get('car_make', ''),
                 'car_model':    data.get('car_model', ''),
                 'car_year':     data.get('car_year', ''),
@@ -226,11 +246,12 @@ def update_product(pid):
             if ebay_links is not None:
                 upd['ebay_links'] = ebay_links
 
-            # new images
+            # Get existing images
             p = database.db.products.find_one({'_id': ObjectId(pid)})
             existing_images = p.get('images', []) if p else []
             existing_loc    = p.get('location_images', []) if p else []
 
+            # Add new images (append to existing)
             for f in request.files.getlist('images'):
                 url = save_image(f)
                 if url: existing_images.append(url)
@@ -243,7 +264,7 @@ def update_product(pid):
         else:
             data = request.get_json()
             upd = {'updated_at': datetime.utcnow()}
-            for field in ['title','part_name','part_number','car_make','car_model',
+            for field in ['title','part_name','part_number','side','color','tags','car_make','car_model',
                           'car_year','description','price','shipping','quantity',
                           'low_stock_threshold','location_text','ebay_links']:
                 if field in data:

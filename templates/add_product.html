@@ -67,6 +67,26 @@
         <label class="label">Part Number</label>
         <input id="f-part-number" type="text" class="input" placeholder="e.g. BP-1234">
       </div>
+      
+      <!-- NEW: Side Selection -->
+      <div>
+        <label class="label">Side</label>
+        <select id="f-side" class="input">
+          <option value="">Not Applicable</option>
+          <option value="Left">Left Side</option>
+          <option value="Right">Right Side</option>
+          <option value="Front">Front</option>
+          <option value="Back">Back</option>
+          <option value="Both">Both Sides</option>
+        </select>
+      </div>
+      
+      <!-- NEW: Color -->
+      <div>
+        <label class="label">Color</label>
+        <input id="f-color" type="text" class="input" placeholder="e.g. Red, Black, Silver">
+      </div>
+      
       <div>
         <label class="label">Car Make</label>
         <input id="f-make" type="text" class="input" placeholder="e.g. BMW">
@@ -95,6 +115,14 @@
         <label class="label">Low Stock Alert at</label>
         <input id="f-low" type="number" min="0" class="input" placeholder="3" value="3">
       </div>
+      
+      <!-- NEW: Tags for different part names -->
+      <div style="grid-column:1/-1;">
+        <label class="label">Tags (Different Part Names/Keywords)</label>
+        <input id="f-tags" type="text" class="input" placeholder="e.g. brake pads, braking system, disc brake pads (comma separated)">
+        <p style="font-size:12px;color:#64748b;margin-top:4px;">Add multiple names/keywords separated by commas</p>
+      </div>
+      
       <div style="grid-column:1/-1;">
         <label class="label">Description</label>
         <textarea id="f-desc" class="input" rows="3" placeholder="Any extra details..."></textarea>
@@ -106,14 +134,14 @@
       <p style="font-weight:600;color:#94a3b8;font-size:13px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;"><i class="fas fa-map-marker-alt" style="color:#f87171;margin-right:6px;"></i>Storage Location</p>
       <label class="label">Location (e.g. Shelf B2, Warehouse 1)</label>
       <input id="f-location" type="text" class="input" placeholder="e.g. Shelf B2" style="margin-bottom:12px;">
-      <label class="label">Location / Warehouse Photos</label>
+      <label class="label">Location / Warehouse Photos (Multiple allowed)</label>
       <input id="f-loc-imgs" type="file" accept="image/*" multiple class="input" style="padding:8px;">
       <div id="loc-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
     </div>
 
     <!-- Product images -->
     <div style="margin-bottom:24px;">
-      <label class="label">Product Images</label>
+      <label class="label">Product Images (Multiple allowed)</label>
       <input id="f-imgs" type="file" accept="image/*" multiple class="input" style="padding:8px;">
       <div id="img-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
     </div>
@@ -189,7 +217,6 @@ async function checkLink(){
 function chooseNew(){
   document.getElementById('step2').style.display='none';
   document.getElementById('step3-new').style.display='block';
-  // Add first link
   ebayLinks = [];
   document.getElementById('links-list').innerHTML='';
   addLinkToList(currentUrl, document.getElementById('new-link-account').value);
@@ -199,7 +226,7 @@ function chooseOld(){
   document.getElementById('step2').style.display='none';
   document.getElementById('step3-old').style.display='block';
   document.getElementById('old-link-url').value = currentUrl;
-  searchOld(); // auto search
+  searchOld();
 }
 
 // ── Links management (new product) ───────────────────────────────────────
@@ -264,10 +291,13 @@ async function submitNew(){
   fd.append('title', title);
   fd.append('part_name',   document.getElementById('f-part-name').value);
   fd.append('part_number', document.getElementById('f-part-number').value);
+  fd.append('side',        document.getElementById('f-side').value);
+  fd.append('color',       document.getElementById('f-color').value);
   fd.append('car_make',    document.getElementById('f-make').value);
   fd.append('car_model',   document.getElementById('f-model').value);
   fd.append('car_year',    document.getElementById('f-year').value);
   fd.append('description', document.getElementById('f-desc').value);
+  fd.append('tags',        document.getElementById('f-tags').value);
   fd.append('price',       document.getElementById('f-price').value||0);
   fd.append('shipping',    document.getElementById('f-shipping').value||0);
   fd.append('quantity',    document.getElementById('f-qty').value||1);

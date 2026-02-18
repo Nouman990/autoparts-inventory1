@@ -27,6 +27,9 @@ def _create_indexes():
             ('car_model', TEXT),
             ('car_year', TEXT),
             ('description', TEXT),
+            ('tags', TEXT),
+            ('side', TEXT),
+            ('color', TEXT),
         ], name='product_text_search')
     except:
         pass

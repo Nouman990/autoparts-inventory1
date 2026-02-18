@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+{% block title %}Product Detail{% endblock %}
+{% block page_title %}Product Detail{% endblock %}
+
+{% block content %}
+<div id="product-content">
+  <div style="text-align:center;padding:60px;color:#475569;"><i class="fas fa-spinner fa-spin" style="font-size:30px;"></i></div>
+</div>
+
+<!-- Add Order Modal -->
+<div id="order-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;">
+  <div class="card" style="width:100%;max-width:440px;margin:20px;">
+    <h3 style="font-weight:800;color:#e2e8f0;margin-bottom:4px;"><i class="fas fa-shopping-cart" style="color:#fb923c;margin-right:8px;"></i>Add Order</h3>
+    <p style="color:#64748b;font-size:13px;margin-bottom:20px;">This will reduce the product quantity automatically.</p>
+    <div style="display:grid;gap:12px;">
+      <div>
+        <label class="label">Qty Sold *</label>
+        <input id="o-qty" type="number" min="1" value="1" class="input">
+      </div>
+      <div>
+        <label class="label">Sale Price ($)</label>
+        <input id="o-price" type="number" step="0.01" class="input">
+      </div>
+      <div>
+        <label class="label">Account</label>
+        <select id="o-account" class="input">
+          <option value="PMC">PMC</option>
+          <option value="Powergen">Powergen</option>
+        </select>
+      </div>
+      <div>
+        <label class="label">eBay Order ID <span style="color:#475569;font-weight:400;">(optional)</span></label>
+        <input id="o-ebay-id" type="text" class="input" placeholder="e.g. 26-12345-67890">
+      </div>
+      <div>
+        <label class="label">Buyer Name <span style="color:#475569;font-weight:400;">(optional)</span></label>
+        <input id="o-buyer" type="text" class="input" placeholder="eBay username">
+      </div>
+      <div>
+        <label class="label">Note <span style="color:#475569;font-weight:400;">(optional)</span></label>
+        <input id="o-note" type="text" class="input" placeholder="Any notes...">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;">
+      <button onclick="submitOrder()" class="btn-primary" style="flex:1;justify-content:center;"><i class="fas fa-check"></i> Add Order</button>
+      <button onclick="closeOrderModal()" class="btn-secondary" style="flex:1;justify-content:center;"><i class="fas fa-times"></i> Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;overflow-y:auto;">
+  <div class="card" style="width:100%;max-width:600px;margin:20px;">
+    <h3 style="font-weight:800;color:#e2e8f0;margin-bottom:20px;"><i class="fas fa-edit" style="color:#818cf8;margin-right:8px;"></i>Edit Product</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="grid-column:1/-1;"><label class="label">Title</label><input id="e-title" class="input"></div>
+      <div><label class="label">Part Name</label><input id="e-part-name" class="input"></div>
+      <div><label class="label">Part Number</label><input id="e-part-number" class="input"></div>
+      <div><label class="label">Car Make</label><input id="e-make" class="input"></div>
+      <div><label class="label">Car Model</label><input id="e-model" class="input"></div>
+      <div><label class="label">Car Year</label><input id="e-year" class="input"></div>
+      <div><label class="label">Price ($)</label><input id="e-price" type="number" step="0.01" class="input"></div>
+      <div><label class="label">Shipping ($)</label><input id="e-shipping" type="number" step="0.01" class="input"></div>
+      <div><label class="label">Quantity</label><input id="e-qty" type="number" min="0" class="input"></div>
+      <div><label class="label">Low Stock Alert</label><input id="e-low" type="number" min="0" class="input"></div>
+      <div style="grid-column:1/-1;"><label class="label">Location</label><input id="e-location" class="input"></div>
+      <div style="grid-column:1/-1;"><label class="label">Description</label><textarea id="e-desc" class="input" rows="3"></textarea></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;">
+      <button onclick="saveEdit()" class="btn-primary" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Save</button>
+      <button onclick="closeEditModal()" class="btn-secondary" style="flex:1;justify-content:center;"><i class="fas fa-times"></i> Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Link Modal -->
+<div id="link-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;">
+  <div class="card" style="width:100%;max-width:440px;margin:20px;">
+    <h3 style="font-weight:800;color:#e2e8f0;margin-bottom:16px;"><i class="fas fa-link" style="color:#818cf8;margin-right:8px;"></i>Add eBay Link</h3>
+    <label class="label">eBay URL</label>
+    <input id="l-url" type="url" class="input" placeholder="https://www.ebay.com/itm/..." style="margin-bottom:12px;">
+    <label class="label">Account</label>
+    <select id="l-account" class="input" style="margin-bottom:20px;">
+      <option value="PMC">PMC</option>
+      <option value="Powergen">Powergen</option>
+    </select>
+    <div style="display:flex;gap:8px;">
+      <button onclick="submitLink()" class="btn-primary" style="flex:1;justify-content:center;"><i class="fas fa-link"></i> Add Link</button>
+      <button onclick="closeLinkModal()" class="btn-secondary" style="flex:1;justify-content:center;"><i class="fas fa-times"></i> Cancel</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const PID = '{{ product_id }}';
+let product = null;
+
+async function loadProduct(){
+  const data = await api('/api/products/'+PID);
+  if(!data.success){ document.getElementById('product-content').innerHTML='<p style="color:#f87171;padding:40px;text-align:center;">Product not found</p>'; return; }
+  product = data.product;
+  render();
+}
+
+function render(){
+  const p = product;
+  const qColor = p.quantity===0?'#f87171':p.quantity<=p.low_stock_threshold?'#fbbf24':'#4ade80';
+
+  document.getElementById('product-content').innerHTML = `
+  <!-- Back + Actions -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <button onclick="history.back()" style="background:none;border:none;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:14px;"><i class="fas fa-arrow-left"></i> Back</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="openOrderModal()" class="btn-primary"><i class="fas fa-shopping-cart"></i> Add Order</button>
+      <button onclick="openEditModal()" class="btn-secondary"><i class="fas fa-edit"></i> Edit</button>
+      <button onclick="openLinkModal()" class="btn-secondary"><i class="fas fa-link"></i> Add Link</button>
+      <button onclick="deleteProduct()" class="btn-danger"><i class="fas fa-trash"></i></button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:20px;align-items:start;">
+
+    <!-- LEFT: Images -->
+    <div>
+      <!-- Main image -->
+      <div style="background:#0f172a;border:1px solid #334155;border-radius:14px;height:280px;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;">
+        ${p.images&&p.images[0]?`<img id="main-img" src="${p.images[0]}" style="width:100%;height:100%;object-fit:contain;">`:
+        '<i class="fas fa-image" style="font-size:60px;color:#334155;"></i>'}
+      </div>
+      <!-- Thumbnails -->
+      ${p.images&&p.images.length>1?`
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${p.images.map(img=>`<img src="${img}" onclick="document.getElementById('main-img').src='${img}'" style="width:56px;height:56px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='transparent'">`).join('')}
+      </div>`:''}
+
+      <!-- Location images -->
+      ${p.location_images&&p.location_images.length?`
+      <div style="margin-top:16px;">
+        <p style="font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;"><i class="fas fa-map-marker-alt" style="color:#f87171;margin-right:4px;"></i>Location Photos</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${p.location_images.map(img=>`<img src="${img}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #334155;">`).join('')}
+        </div>
+      </div>`:''}
+    </div>
+
+    <!-- RIGHT: Details -->
+    <div>
+      <h1 style="font-size:22px;font-weight:800;color:#e2e8f0;margin-bottom:8px;">${p.title}</h1>
+
+      <!-- Car info -->
+      ${p.car_make||p.car_model?`
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        ${p.car_make?`<span style="background:#1e3a8a;color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;"><i class="fas fa-car" style="margin-right:4px;"></i>${p.car_make}</span>`:''}
+        ${p.car_model?`<span style="background:#1e3a8a;color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">${p.car_model}</span>`:''}
+        ${p.car_year?`<span style="background:#1e3a8a;color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">${p.car_year}</span>`:''}
+      </div>`:''}
+
+      <!-- Part info -->
+      <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${[['Part Name',p.part_name],['Part No.',p.part_number],['Price','$'+p.price],['Shipping','$'+p.shipping]].filter(x=>x[1]&&x[1]!='$0').map(([k,v])=>`
+          <div><p style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">${k}</p><p style="font-size:15px;color:#e2e8f0;font-weight:600;">${v}</p></div>
+        `).join('')}
+      </div>
+
+      <!-- Stock -->
+      <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <p style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Current Stock</p>
+          <p style="font-size:40px;font-weight:900;color:${qColor};line-height:1.1;">${p.quantity}</p>
+          <p style="font-size:12px;color:#475569;">Alert at: ${p.low_stock_threshold} • Total sold: ${p.total_sold}</p>
+        </div>
+        <button onclick="openQtyModal()" style="background:rgba(124,58,237,.2);border:1px solid #7c3aed;color:#a78bfa;padding:10px 18px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;">
+          <i class="fas fa-edit" style="margin-right:6px;"></i>Update Qty
+        </button>
+      </div>
+
+      <!-- Location -->
+      ${p.location_text?`
+      <div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+        <i class="fas fa-map-marker-alt" style="color:#f87171;font-size:18px;"></i>
+        <div><p style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Location</p><p style="color:#e2e8f0;font-weight:600;">${p.location_text}</p></div>
+      </div>`:''}
+
+      <!-- eBay Links -->
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <p style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">eBay Links (${p.ebay_links.length})</p>
+          ${p.ebay_links.length>1?`<span class="badge-group"><i class="fas fa-layer-group" style="margin-right:4px;"></i>Group Product</span>`:''}
+        </div>
+        ${p.ebay_links.length?p.ebay_links.map((l,i)=>`
+          <div style="display:flex;align-items:center;gap:8px;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px 12px;margin-bottom:6px;">
+            <span class="${l.account==='PMC'?'badge-pmc':'badge-powergen'}">${l.account||'—'}</span>
+            <a href="${l.url}" target="_blank" style="flex:1;font-size:12px;color:#818cf8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;" title="${l.url}">${l.url}</a>
+            <button onclick="removeLink('${l.url.replace(/'/g,"\\'")}',${i})" style="background:none;border:none;cursor:pointer;color:#475569;" title="Remove link"><i class="fas fa-unlink"></i></button>
+          </div>
+        `).join(''):`<p style="color:#475569;font-size:13px;">No links yet. <button onclick="openLinkModal()" style="background:none;border:none;color:#818cf8;cursor:pointer;font-size:13px;">Add one</button></p>`}
+      </div>
+
+      ${p.description?`<div style="background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px;"><p style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Description</p><p style="color:#94a3b8;font-size:14px;line-height:1.6;">${p.description}</p></div>`:''}
+    </div>
+  </div>
+
+  <!-- Orders for this product -->
+  <div class="card" style="margin-top:20px;">
+    <h3 style="font-weight:700;color:#e2e8f0;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+      <span><i class="fas fa-shopping-cart" style="color:#fb923c;margin-right:8px;"></i>Orders for this Product</span>
+      <button onclick="openOrderModal()" class="btn-primary" style="font-size:13px;padding:8px 14px;"><i class="fas fa-plus"></i> Add Order</button>
+    </h3>
+    <div id="orders-list"></div>
+  </div>
+  `;
+
+  loadOrders();
+  // Fill edit modal
+  document.getElementById('e-title').value       = p.title;
+  document.getElementById('e-part-name').value   = p.part_name;
+  document.getElementById('e-part-number').value = p.part_number;
+  document.getElementById('e-make').value        = p.car_make;
+  document.getElementById('e-model').value       = p.car_model;
+  document.getElementById('e-year').value        = p.car_year;
+  document.getElementById('e-price').value       = p.price;
+  document.getElementById('e-shipping').value    = p.shipping;
+  document.getElementById('e-qty').value         = p.quantity;
+  document.getElementById('e-low').value         = p.low_stock_threshold;
+  document.getElementById('e-location').value    = p.location_text;
+  document.getElementById('e-desc').value        = p.description;
+  document.getElementById('o-price').value       = p.price;
+}
+
+async function loadOrders(){
+  const data = await api('/api/orders/list?product_id='+PID);
+  const c = document.getElementById('orders-list');
+  if(!data.orders||!data.orders.length){ c.innerHTML='<p style="color:#475569;font-size:14px;">No orders yet for this product.</p>'; return; }
+  c.innerHTML=`<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead><tr style="border-bottom:1px solid #334155;color:#475569;">
+      <th style="padding:8px;text-align:left;">Date</th>
+      <th style="padding:8px;text-align:left;">Qty</th>
+      <th style="padding:8px;text-align:left;">Price</th>
+      <th style="padding:8px;text-align:left;">Account</th>
+      <th style="padding:8px;text-align:left;">eBay Order ID</th>
+      <th style="padding:8px;text-align:left;">Buyer</th>
+      <th style="padding:8px;text-align:left;">Note</th>
+      <th style="padding:8px;"></th>
+    </tr></thead>
+    <tbody>
+    ${data.orders.map(o=>`
+      <tr style="border-bottom:1px solid #1e293b;" onmouseover="this.style.background='#0f172a'" onmouseout="this.style.background='transparent'">
+        <td style="padding:8px;color:#94a3b8;">${new Date(o.created_at).toLocaleDateString()}</td>
+        <td style="padding:8px;font-weight:700;color:#fb923c;">${o.quantity_sold}</td>
+        <td style="padding:8px;color:#4ade80;">$${o.sale_price}</td>
+        <td style="padding:8px;"><span class="${o.account==='PMC'?'badge-pmc':'badge-powergen'}">${o.account||'—'}</span></td>
+        <td style="padding:8px;color:#64748b;font-size:12px;">${o.ebay_order_id||'—'}</td>
+        <td style="padding:8px;color:#94a3b8;">${o.buyer_name||'—'}</td>
+        <td style="padding:8px;color:#64748b;">${o.note||'—'}</td>
+        <td style="padding:8px;"><button onclick="deleteOrder('${o._id}')" style="background:none;border:none;cursor:pointer;color:#475569;" title="Delete & restore qty"><i class="fas fa-trash"></i></button></td>
+      </tr>
+    `).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+// ── Order modal ────────────────────────────────────────────────────────────
+function openOrderModal(){ document.getElementById('order-modal').style.display='flex'; }
+function closeOrderModal(){ document.getElementById('order-modal').style.display='none'; }
+
+async function submitOrder(){
+  const data=await api('/api/orders/add',{method:'POST',body:JSON.stringify({
+    product_id: PID,
+    quantity_sold: parseInt(document.getElementById('o-qty').value)||1,
+    sale_price: parseFloat(document.getElementById('o-price').value)||product.price,
+    account: document.getElementById('o-account').value,
+    ebay_order_id: document.getElementById('o-ebay-id').value,
+    buyer_name: document.getElementById('o-buyer').value,
+    note: document.getElementById('o-note').value
+  })});
+  if(data.success){
+    toast(`Order added! Qty is now ${data.new_quantity}`,'success');
+    closeOrderModal();
+    loadProduct();
+  } else toast(data.error||'Error','error');
+}
+
+async function deleteOrder(oid){
+  if(!confirm('Delete this order? Quantity will be restored.')) return;
+  const data=await api('/api/orders/'+oid,{method:'DELETE'});
+  if(data.success){toast('Order deleted, qty restored','success');loadProduct();}
+  else toast(data.error||'Error','error');
+}
+
+// ── Edit modal ─────────────────────────────────────────────────────────────
+function openEditModal(){ document.getElementById('edit-modal').style.display='flex'; }
+function closeEditModal(){ document.getElementById('edit-modal').style.display='none'; }
+
+async function saveEdit(){
+  const data=await api('/api/products/'+PID,{method:'PUT',body:JSON.stringify({
+    title:       document.getElementById('e-title').value,
+    part_name:   document.getElementById('e-part-name').value,
+    part_number: document.getElementById('e-part-number').value,
+    car_make:    document.getElementById('e-make').value,
+    car_model:   document.getElementById('e-model').value,
+    car_year:    document.getElementById('e-year').value,
+    price:       parseFloat(document.getElementById('e-price').value)||0,
+    shipping:    parseFloat(document.getElementById('e-shipping').value)||0,
+    quantity:    parseInt(document.getElementById('e-qty').value)||0,
+    low_stock_threshold: parseInt(document.getElementById('e-low').value)||3,
+    location_text: document.getElementById('e-location').value,
+    description: document.getElementById('e-desc').value
+  })});
+  if(data.success){toast('Saved!','success');closeEditModal();loadProduct();}
+  else toast(data.error||'Error','error');
+}
+
+// Quick qty modal (inline)
+function openQtyModal(){
+  const v = parseInt(prompt('New quantity:', product.quantity));
+  if(isNaN(v)||v<0) return;
+  api('/api/products/'+PID+'/quantity',{method:'PUT',body:JSON.stringify({quantity:v})}).then(d=>{
+    if(d.success){toast('Qty updated to '+v,'success');loadProduct();}
+    else toast(d.error||'Error','error');
+  });
+}
+
+// ── Link modal ─────────────────────────────────────────────────────────────
+function openLinkModal(){ document.getElementById('link-modal').style.display='flex'; }
+function closeLinkModal(){ document.getElementById('link-modal').style.display='none'; }
+
+async function submitLink(){
+  const url=document.getElementById('l-url').value.trim();
+  const account=document.getElementById('l-account').value;
+  if(!url){toast('URL required','error');return;}
+  const data=await api('/api/products/'+PID+'/links',{method:'POST',body:JSON.stringify({url,account})});
+  if(data.success){toast('Link added!','success');closeLinkModal();loadProduct();}
+  else toast(data.error||'Error','error');
+}
+
+async function removeLink(url){
+  if(!confirm('Remove this eBay link?')) return;
+  const data=await api('/api/products/'+PID+'/links',{method:'DELETE',body:JSON.stringify({url})});
+  if(data.success){toast('Link removed','success');loadProduct();}
+  else toast(data.error||'Error','error');
+}
+
+// ── Delete product ─────────────────────────────────────────────────────────
+async function deleteProduct(){
+  if(!confirm('Delete this product and all its orders?')) return;
+  const data=await api('/api/products/'+PID,{method:'DELETE'});
+  if(data.success){toast('Deleted','success');setTimeout(()=>window.location.href='/products',1000);}
+  else toast(data.error||'Error','error');
+}
+
+// close modals on backdrop click
+['order-modal','edit-modal','link-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.style.display='none';});
+});
+
+loadProduct();
+</script>
+{% endblock %}
