@@ -68,7 +68,6 @@
         <input id="f-part-number" type="text" class="input" placeholder="e.g. BP-1234">
       </div>
       
-      <!-- NEW: Side Selection -->
       <div>
         <label class="label">Side</label>
         <select id="f-side" class="input">
@@ -81,7 +80,6 @@
         </select>
       </div>
       
-      <!-- NEW: Color -->
       <div>
         <label class="label">Color</label>
         <input id="f-color" type="text" class="input" placeholder="e.g. Red, Black, Silver">
@@ -116,7 +114,6 @@
         <input id="f-low" type="number" min="0" class="input" placeholder="3" value="3">
       </div>
       
-      <!-- NEW: Tags for different part names -->
       <div style="grid-column:1/-1;">
         <label class="label">Tags (Different Part Names/Keywords)</label>
         <input id="f-tags" type="text" class="input" placeholder="e.g. brake pads, braking system, disc brake pads (comma separated)">
@@ -192,6 +189,7 @@
 {% block extra_js %}
 <script>
 let currentUrl = '';
+let currentAccount = 'PMC'; // Default account
 let ebayLinks  = [];
 let selectedProductId = '';
 
@@ -217,9 +215,17 @@ async function checkLink(){
 function chooseNew(){
   document.getElementById('step2').style.display='none';
   document.getElementById('step3-new').style.display='block';
+  
+  // CRITICAL FIX: Initialize array AND add the first link
   ebayLinks = [];
-  document.getElementById('links-list').innerHTML='';
-  addLinkToList(currentUrl, document.getElementById('new-link-account').value);
+  if(currentUrl) {
+    ebayLinks.push({
+      url: currentUrl, 
+      account: currentAccount,
+      label: ''
+    });
+  }
+  renderLinks();
 }
 
 function chooseOld(){
@@ -252,11 +258,11 @@ function removeLink(index){
 
 function renderLinks(){
   const c = document.getElementById('links-list');
-  if(!ebayLinks.length){ c.innerHTML=''; return; }
+  if(!ebayLinks.length){ c.innerHTML='<p style="color:#64748b;font-size:13px;">No links added yet</p>'; return; }
   c.innerHTML = ebayLinks.map((l,i)=>`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;background:#1e293b;padding:8px 12px;border-radius:10px;">
       <span class="${l.account==='PMC'?'badge-pmc':'badge-powergen'}">${l.account}</span>
-      <span style="flex:1;font-size:13px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.url}</span>
+      <span style="flex:1;font-size:13px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;word-break:break-all;" title="${l.url}">${l.url}</span>
       <button onclick="removeLink(${i})" style="background:none;border:none;cursor:pointer;color:#f87171;"><i class="fas fa-times"></i></button>
     </div>
   `).join('');
